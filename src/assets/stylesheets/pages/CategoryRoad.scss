@@ -1,0 +1,18 @@
+.CategoryRoad {
+  & .card {
+    box-shadow: 0px 3px 4px rgba(0, 0, 0, 0.1);
+    border-radius: 6px;
+    padding: 12px;
+  }
+  & .card-title {
+    font-size: 16px;
+    line-height: 1.5;
+    
+  }
+  & .card-body {
+    padding: 0;
+  }
+  & p {
+    margin-bottom: 0;
+  }
+}

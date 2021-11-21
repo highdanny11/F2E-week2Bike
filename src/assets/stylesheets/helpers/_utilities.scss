@@ -1,0 +1,48 @@
+$utilities: map-merge(
+  $utilities,
+  (
+    //  增加api
+    "cursor": (
+      property: cursor,
+      class: cursor,
+      responsive: true,
+      values: auto pointer grab,
+    ),
+    // 修改api
+    "line-height": map-merge( 
+      map-get($utilities,"line-height"),
+      (
+        responsive: true,
+        values:map-merge(
+          map-get(map-get($utilities,"line-height"),"values"),
+          (24:24px)
+        )
+      ),
+    ),
+    //  增加api
+    "letter-spacing": (
+      property: letter-spacing,
+      class: letterSp,
+      responsive: true,
+      values: (
+        15:15px,
+        13:13px,
+        10:10px
+      ),
+    ),
+    // 修改api
+    "rounded": map-merge( 
+      map-get($utilities,"rounded"),
+      (
+        responsive: true,
+        values:map-merge(
+          map-get(map-get($utilities,"rounded"),"values"),
+          (
+            10:10px,
+            31:31px,
+          )
+        )
+      ),
+    ),
+  )
+);

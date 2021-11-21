@@ -1,0 +1,13 @@
+@import '~bootstrap/scss/functions';
+@import './helpers/variables';
+@import "~bootstrap/scss/utilities";
+@import './helpers/utilities'; 
+@import '~bootstrap/scss/bootstrap';
+
+@import './components/switch';
+@import './components/map';
+@import './components/textoverflow';
+@import './base/base';
+@import './components/textAbout';
+@import './pages/index';
+@import './pages/CategoryRoad';

@@ -21,17 +21,17 @@
       </p>
       <ul class="list-unstyled">
         <li class="mb-4">
-          <router-link
-            to="/RentBike"
+          <a
+            href="#"
             class="btn btn-outline-dark py-3 w-100 border-2 rounded-10"
-            >尋找 Youbike</router-link
+            >尋找 Youbike</a
           >
         </li>
         <li class="mb-4">
-          <router-link
-            to="/CategoryRoad"
+          <a
+            href="#"
             class="btn btn-outline-dark py-3 w-100 border-2 rounded-10"
-            >查詢自行車道</router-link
+            >查詢自行車道</a
           >
         </li>
         <li>

@@ -1,0 +1,44 @@
+// 首頁使用到
+.bikeImg {
+  width: 119px;
+  height: 75px;
+}
+.banner {
+  &-wrap p {
+    margin-bottom: 114px;
+  }
+  &-footer {
+    @include media-breakpoint-up(lg) {
+      right: 3%;
+    }
+  }
+  &-logo {
+    background-image: url('~@/assets/img/logo.png');
+    background-size: cover;
+    background-repeat: no-repeat;
+    background-position:center;
+    width: 245px;
+    height: 47px;
+    @include media-breakpoint-up(md) {
+      width: 386px;
+      height: 74px;
+    }
+    @include media-breakpoint-up(lg) {
+      width: 245px;
+      height: 47px;
+    }
+  }
+}
+// navBar 
+.navHeader {
+  &-logo {
+    width: 235px;
+    height: 43px;
+  }
+}
+.footerBar-link {
+  color: #000;
+  &:hover {
+    color: #fff;
+  }
+}

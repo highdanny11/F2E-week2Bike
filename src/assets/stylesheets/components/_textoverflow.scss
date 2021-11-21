@@ -1,0 +1,21 @@
+.text-overflowHiden5 { // 多行文字隱藏5行
+  display: -webkit-box;
+  text-overflow: ellipsis;
+  -webkit-box-orient: vertical;
+  -webkit-line-clamp: 5; /*顯示幾行*/
+  overflow: hidden;
+}
+.text-overflowHiden2 { // 多行文字隱藏2行
+  display: -webkit-box;
+  text-overflow: ellipsis;
+  -webkit-box-orient: vertical;
+  -webkit-line-clamp: 2; /*顯示幾行*/
+  overflow: hidden;
+} 
+.text-overflow { // 單行多餘影藏
+  overflow:hidden;
+  white-space: nowrap;
+  text-overflow: ellipsis;
+  /* text-overflow: ''; */
+  /* text-overflow: "-"; */
+  }
