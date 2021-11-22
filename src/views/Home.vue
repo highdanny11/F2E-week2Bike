@@ -35,10 +35,10 @@
           >
         </li>
         <li>
-          <a
-            href="#"
+          <router-link
+            to="/FoodList"
             class="btn btn-outline-dark py-3 w-100 border-2 rounded-10"
-            >附近景點、美食</a
+            >附近景點、美食</router-link
           >
         </li>
       </ul>

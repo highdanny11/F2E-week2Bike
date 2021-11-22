@@ -27,6 +27,21 @@ const routes = [
     name: 'CategoryRoadMap',
     component: () => import('../views/CategoryRoadMap.vue'),
   },
+  {
+    path: '/FoodList',
+    name: 'FoodList',
+    component: () => import('../views/FoodList.vue'),
+  },
+  {
+    path: '/FoodViewDetail/:id',
+    name: 'FoodViewDetail',
+    component: () => import('../views/FoodViewDetail.vue'),
+  },
+  {
+    path: '/FoodViewMap/:id',
+    name: 'FoodViewMap',
+    component: () => import('../views/FoodViewMap.vue'),
+  },
 ];
 
 const router = createRouter({

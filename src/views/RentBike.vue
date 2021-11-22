@@ -196,7 +196,7 @@ export default {
           attribution: '&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors',
         },
       ).addTo(map);
-      L.marker(this.local.center, { ...redIcon }).addTo(map);
+      L.marker(this.local.center, { icon: redIcon }).addTo(map);
       this.getBikeRentPosition(); // 抓取站點資料
     },
     renderMarker() { // 加入座標，放入座標群組(預設顯示可租車位的座標)
