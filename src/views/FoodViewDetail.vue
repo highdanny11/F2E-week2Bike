@@ -11,7 +11,7 @@
           />
           <i class="bi bi-chevron-left d-block d-lg-none text-dark"></i>
         </a>
-        <p class="mb-0">國立故宮博物院</p>
+        <p class="mb-0">{{data.Name}}</p>
         <div class="invisible d-lg-none"></div>
       </div>
     </div>
@@ -36,7 +36,8 @@
           <i class="bi bi-geo-alt-fill text-primary me-2"></i>
           {{data.Address}}
           <router-link
-          :to="`/FoodViewMap/${data.Position?.PositionLat},${data.Position?.PositionLon}`"
+          :to="`/FoodViewMap/${data.Position?.PositionLat},
+          ${data.Position?.PositionLon},${data.Name}`"
           class="btn btn-primary px-2 py-1 rounded-50 ms-2">地圖</router-link>
         </h5>
         <p class="text-info">

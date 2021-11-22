@@ -11,7 +11,7 @@
           />
           <i class="bi bi-chevron-left d-block d-lg-none text-dark"></i>
         </a>
-        <p class="mb-0">國立故宮博物院</p>
+        <p class="mb-0">{{name}}</p>
         <div class="invisible d-lg-none"></div>
       </div>
     </div>
@@ -26,7 +26,7 @@ let map = {};
 export default {
   data() {
     return {
-      data: {},
+      name: '',
       PositionLat: '',
       PositionLon: '',
     };
@@ -65,6 +65,7 @@ export default {
     console.log(data);
     this.PositionLat = Number(data[0]);
     this.PositionLon = Number(data[1]);
+    this.name = data[2];
     this.renderMap();
   },
 };
