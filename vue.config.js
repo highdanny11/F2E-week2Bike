@@ -1,3 +1,15 @@
 module.exports = {
-  publicPath: '/F2E-week2Bike/'
+  publicPath: '/F2E-week2Bike/',
+  chainWebpack: config => {
+    config.plugin('html').tap(args => {
+      const [obj] = args;
+      obj.title = '微笑Uibke網';
+      obj.meta = {
+        keywords: '台灣Uibke網',
+        description: '快速搜索附近站點、美食、景點，聰明旅遊輕鬆樂活。'
+      };
+      obj.icon = 'bikeIcon.png';
+      return args;
+    });
+  }
 }
