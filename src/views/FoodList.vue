@@ -12,7 +12,7 @@
           <i class="bi bi-chevron-left d-block d-lg-none text-dark"></i>
         </router-link>
         <!-- 切換租車、還車量  -->
-        <label class="switchBike d-none d-lg-block" for="switchbike">
+        <label class="switchBike d-none d-md-block" for="switchbike">
           <div class="switchBike-text">
             <span class="d-flex align-items-center"
               ><i class="fas fa-mountain me-3"></i>景 點</span
@@ -31,7 +31,7 @@
       </div>
     </div>
   </nav>
-  <div class="container foodMain mt-lg-10 mt-6">
+  <div class="container foodMain mt-lg-10 my-6">
     <div class="row row-cols-lg-3 row-cols-md-2 row-cols-1 gx-lg-2 gx-md-3 gy-lg-2 gy-md-3 gy-2">
       <div class="col" v-for="item in data" :key="item.ID">
         <div class="card">
@@ -45,15 +45,15 @@
             <div class="col-7">
               <div class="card-body h-100 d-flex flex-column justify-content-between">
                 <div>
-                  <p class="text-primary mb-1 text-end">5km內</p>
-                  <h5 class="card-title">
-                    {{item.RestaurantName === undefined ? item.Name : item.RestaurantName}}
+                  <p class="text-primary mb-1 text-end">
+                    {{countDistance(item.Position.PositionLat, item.Position.PositionLon)}}</p>
+                  <h5 class="card-title text-overflow">
+                    {{item.name}}
                   </h5>
                 </div>
                 <p class="card-text text-info text-overflow">
                   <router-link
-                  :to="`/FoodViewDetail/${item.ID},${item.RestaurantName === undefined
-                  ? '景點' : '美食'}`"
+                  :to="`/FoodViewDetail/${item.ID},${item.key}`"
                   class="stretched-link"></router-link>
                   <i class="bi bi-telephone-fill me-1 text-primary me-2"></i>{{item.Phone}}
                 </p>
@@ -65,17 +65,19 @@
     </div>
   </div>
   <footer
-    class="d-lg-none py-3 d-flex bg-primary position-fixed bottom-0 w-100"
+    class="d-md-none py-3 d-flex bg-primary position-fixed bottom-0 w-100"
     style="z-index: 1000"
   >
     <div class="w-50 text-center">
-      <a href="#" @click.prevent="selectview()"
+      <a href="#" :class="{'text-white':switchFoodView}"
+      @click.prevent="switchFoodView = true;"
       class="footerBar-link text-decoration-none"
         ><i class="fas fa-mountain me-3"></i>景 點</a
       >
     </div>
     <div class="w-50 text-center">
-      <a href="#" @click.prevent="selectfood()"
+      <a href="#" :class="{'text-white': !switchFoodView}"
+      @click.prevent="switchFoodView = false;"
       class="footerBar-link text-decoration-none"
         ><i class="fas fa-hamburger me-3"></i>美 食</a
       >
@@ -84,61 +86,77 @@
 </template>
 
 <script>
-import JsSHA from 'jssha';
+import getAuthorizationeHader from '@/assets/javascript/AuthorizationHeader';
 
-const getAuthorizationeHader = () => {
-  const AppID = process.env.VUE_APP_TRX_ID;
-  const AppKey = process.env.VUE_APP_TRX_KEY;
-  const GMTString = new Date().toUTCString();
-  const ShaObj = new JsSHA('SHA-1', 'TEXT');
-  ShaObj.setHMACKey(AppKey, 'TEXT');
-  ShaObj.update(`x-date: ${GMTString}`);
-  const HMAC = ShaObj.getHMAC('B64');
-  const Authorization = `hmac username="${AppID}", algorithm="hmac-sha1", headers="x-date", signature="${HMAC}"`;
-  return { Authorization, 'X-Date': GMTString };
-};
 export default {
   data() {
     return {
       latitude: '',
       longitude: '',
-      data: [],
       datafood: [],
       dataview: [],
       switchFoodView: true,
     };
   },
   methods: {
-    getnearbyfoodinfo() {
-      const url = `https://ptx.transportdata.tw/MOTC/v2/Tourism/Restaurant?$top=30&$spatialFilter=nearby(${this.latitude},${this.longitude}, 5000)&$format=JSON`;
-      this.$http.get(url, { headers: getAuthorizationeHader() })
-        .then((res) => {
-          this.datafood = res.data;
+    getnearAllInfo() {
+      const ScenicSpoturl = `https://ptx.transportdata.tw/MOTC/v2/Tourism/ScenicSpot?$top=30&$spatialFilter=nearby(${this.latitude},${this.longitude}, 5000)&$format=JSON`;
+      const Foodurl = `https://ptx.transportdata.tw/MOTC/v2/Tourism/Restaurant?$top=30&$spatialFilter=nearby(${this.latitude},${this.longitude}, 5000)&$format=JSON`;
+      const getnearbyviewinfo = (() => this.$http.get(ScenicSpoturl,
+        { headers: getAuthorizationeHader() })
+      );
+      const getnearbyfoodinfo = (() => this.$http.get(Foodurl,
+        { headers: getAuthorizationeHader() })
+      );
+      Promise.all([getnearbyviewinfo(), getnearbyfoodinfo()])
+        .then(([res1, res2]) => {
+          this.dataview = res1.data;
+          this.datafood = res2.data;
+        })
+        .catch((err) => {
+          console.log(err);
         });
     },
-    getnearbyviewinfo() {
-      const url = `https://ptx.transportdata.tw/MOTC/v2/Tourism/ScenicSpot?$top=30&$spatialFilter=nearby(${this.latitude},${this.longitude}, 5000)&$format=JSON`;
-      this.$http.get(url, { headers: getAuthorizationeHader() })
-        .then((res) => {
-          this.dataview = res.data;
-          this.data = res.data;
-        });
+    updata(arry) {
+      const ary = [];
+      arry.forEach((item) => {
+        const data = {
+          key: item.ScenicSpotID ? '景點' : '美食',
+          ID: item.ScenicSpotID || item.RestaurantID,
+          name: item.ScenicSpotName || item.RestaurantName,
+          Picture: { ...item.Picture },
+          Position: { ...item.Position },
+          Phone: item.Phone,
+        };
+        ary.push(data);
+      });
+      return ary;
     },
-    selectfood() { // 給footer切換
-      this.switchFoodView = false;
-      this.data = this.datafood;
-    },
-    selectview() {
-      this.switchFoodView = true;
-      this.data = this.dataview;
+    countDistance(lat1, lon1) {
+      if ((lat1 === this.latitude) && (lon1 === this.longitude)) {
+        return 0;
+      }
+      const radlat1 = (Math.PI * lat1) / 180;
+      const radlat2 = (Math.PI * this.latitude) / 180;
+      const theta = lon1 - this.longitude;
+      const radtheta = (Math.PI * theta) / 180;
+      let dist = (Math.sin(radlat1) * Math.sin(radlat2))
+        + (Math.cos(radlat1) * Math.cos(radlat2) * Math.cos(radtheta));
+      if (dist > 1) {
+        dist = 1;
+      }
+      dist = Math.acos(dist);
+      dist = (dist * 180) / Math.PI;
+      dist = dist * 60 * 1.1515;
+      dist *= 1.609344;
+      dist = dist.toFixed(3);
+      if (dist < 1) {
+        return ` ${dist * 1000} 公尺`;
+      }
+      return `${dist}公里`;
     },
     selectfoodview() { // 給footer切換
       this.switchFoodView = !this.switchFoodView;
-      if (this.switchFoodView) {
-        this.data = this.dataview;
-      } else {
-        this.data = this.datafood;
-      }
     },
     getLocation() { // 抓取自己位置
       if (navigator.geolocation) {
@@ -148,8 +166,15 @@ export default {
     showPosition(position) {
       this.latitude = position.coords.latitude;
       this.longitude = position.coords.longitude;
-      this.getnearbyfoodinfo(); // 進入頁面就把兩種資料抓下來
-      this.getnearbyviewinfo();
+      this.getnearAllInfo();
+    },
+  },
+  computed: {
+    data() {
+      if (this.switchFoodView) {
+        return this.updata(this.dataview);
+      }
+      return this.updata(this.datafood);
     },
   },
   mounted() {

@@ -1,18 +1,17 @@
 <template>
   <nav class="bg-primary navHeader py-6">
     <div class="container">
-      <div class="d-flex justify-content-between align-items-center">
+      <div class="d-flex justify-content-center align-items-center justify-content-md-between">
         <!-- a 連結到首頁 -->
         <router-link to="/"
           ><img
-            class="navHeader-logo d-none d-lg-block"
+            class="navHeader-logo"
             :src="require('@/assets/img/logo.png')"
             alt=""
           />
-          <i class="bi bi-chevron-left d-block d-lg-none text-dark"></i>
         </router-link>
         <!-- 切換租車、還車量  -->
-        <label class="switchBike d-none d-lg-block" for="switchbike">
+        <label class="switchBike d-none d-md-block" for="switchbike">
           <div class="switchBike-text">
             <span class="d-flex align-items-center"
               ><i class="fas fa-biking me-3"></i>租 車</span
@@ -21,48 +20,69 @@
               ><i class="fas fa-parking me-3"></i>還 車</span
             >
           </div>
-          <input type="checkbox" id="switchbike" @click="switchRentReturn()" />
+          <input type="checkbox" id="switchbike"
+          v-model="swichBikeStation"
+          @click="swichBikeStation = !swichBikeStation" />
           <div class="switchBike-control text-primary">
             <span><i class="fas fa-biking me-3"></i>租 車</span>
             <span><i class="fas fa-parking me-3"></i>還 車</span>
           </div>
         </label>
-        <!-- 切換顯示，車道 -->
-        <label class="switchRoad" for="switchroad">
-          <input type="checkbox" id="switchroad" @click="swicthBikeRoad()"/>
-          <div class="switchRoad-text px-3">
-            <span>顯示車道</span>
-            <span>隱藏車道</span>
-          </div>
-        </label>
+        <div class="invisible d-none d-lg-block" style="width:75px;">...</div>
       </div>
     </div>
   </nav>
   <div class="position-relative">
     <!-- 尋找站點，暫時關閉 -->
-    <div class="mt-3 w-25 d-none
-    position-absolute start-50 top-10 translate-middle" style="z-index:1000;">
-      <input
-        type="text"
-        class="form-control me-3"
-        id="exampleFormControlInput1"
-        placeholder="尋找站點"
-      />
-      <!-- search btn -->
-      <a href="#" class="btn btn-dark"><i class="bi bi-search"></i></a>
+    <div class="w-md-50 w-75 w-lg-25 d-flex input-group d-flex
+    position-absolute start-50 top-10 translate-middle"
+    style="z-index:1000;">
+      <select class="form-select me-1"
+      @change="getCitysStations"
+      v-model="category"
+      aria-label="select CityName">
+        <option selected value="">選擇縣市</option>
+        <option
+        :value="placeItem.City"
+        v-for="placeItem in place"
+        :key="placeItem.City">
+        {{placeItem.CityName}}
+        </option>
+      </select>
+      <select class="form-select"
+      v-show="cityStations[0]"
+      v-model="stationName"
+      @change="searchStation()"
+      aria-label="select station">
+        <option selected value="">選擇站點</option>
+        <option :value="stationData.StationName.Zh_tw"
+        v-for="stationData in cityStations"
+        :key="stationData.StationName.Zh_tw">
+        {{stationData.StationName.Zh_tw}}
+        </option>
+      </select>
     </div>
+    <button type="button" @click.prevent="backToMylocal"
+    v-show="localIconShowHiden"
+    class="position-absolute rounded-circle positionIcon
+    justify-content-center align-items-center
+    flex-column btn btn-dark">
+      <img class="d-block" style="width:25px;" :src="require('@/assets/img/Vector.png')" alt="">
+      <p class="mb-0 d-none d-md-block">所在地</p>
+    </button>
     <div id="map" class="map mapBike"></div>
-    <!-- footer table開始出現 -->
     <footer class=
-    "d-lg-none py-3
+    "d-md-none py-3
     d-flex bg-primary position-absolute bottom-0 w-100"
     style="z-index:1000;">
     <div class="w-50 text-center">
-      <a href="#" @click.prevent="switchRentReturn()"
+      <a href="#" @click.prevent="swichBikeStation = false"
+      :class="{'text-white' : !swichBikeStation}"
       class="footerBar-link text-decoration-none"><i class="fas fa-biking me-3"></i>租 車</a>
     </div>
     <div class="w-50 text-center">
-      <a href="#" @click.prevent="switchRentReturn()"
+      <a href="#" @click.prevent="swichBikeStation = true"
+      :class="{'text-white' : swichBikeStation}"
       class="footerBar-link text-decoration-none"><i class="fas fa-parking me-3"></i>還 車</a>
     </div>
     </footer>
@@ -70,118 +90,53 @@
 </template>
 
 <script>
-import JsSHA from 'jssha';
 import L from 'leaflet';
-import Wkt from 'wicket';
 import 'leaflet.markercluster/dist/leaflet.markercluster';
-
-let map = {};
-let myLayer = {};
-const wkt = new Wkt.Wkt();
-const markers = new L.MarkerClusterGroup();
-const getAuthorizationeHader = () => {
-  const AppID = process.env.VUE_APP_TRX_ID;
-  const AppKey = process.env.VUE_APP_TRX_KEY;
-  const GMTString = new Date().toUTCString();
-  const ShaObj = new JsSHA('SHA-1', 'TEXT');
-  ShaObj.setHMACKey(AppKey, 'TEXT');
-  ShaObj.update(`x-date: ${GMTString}`);
-  const HMAC = ShaObj.getHMAC('B64');
-  const Authorization = `hmac username="${AppID}", algorithm="hmac-sha1", headers="x-date", signature="${HMAC}"`;
-  return { Authorization, 'X-Date': GMTString };
-};
+import {
+  getNearStation,
+  getNearbygetBikeRentInfo,
+  getCityPositionStation,
+} from '@/assets/javascript/GetAPI';
+import place from '@/assets/json/place.json';
 
 export default {
   data() {
     return {
+      map: {},
+      markers: new L.MarkerClusterGroup(),
+      myLayer: null,
+      mapCenter: {},
       local: {},
       data: [],
-      road: [],
-      myLayers: [],
+      stationData: [],
       latitude: NaN,
       longitude: NaN,
-      areaKey: '',
-      swichBikeStation: true,
-      switchBikesRoad: true,
-      currentCategory: {
-        TXG: 'Taichung',
-        KEE: 'Keelung',
-        HSQ: 'HsinchuCounty',
-        MIA: 'MiaoliCounty',
-        CHA: 'ChanghuaCounty',
-        NWT: 'NewTaipei',
-        NAN: 'NantouCounty',
-        YUN: 'YunlinCounty',
-        CYQ: 'ChiayiCounty',
-        CYI: 'Chiayi',
-        PIF: 'PingtungCounty',
-        ILA: 'YilanCounty',
-        HUA: 'HualienCounty',
-        TTT: 'TaitungCounty',
-        KIN: 'KinmenCounty',
-        PEN: 'PenghuCounty',
-        TAO: 'Taoyuan',
-        TPE: 'Taipei',
-        KHH: 'Kaohsiung',
-        TNN: 'Tainan',
-      },
+      swichBikeStation: false,
+      place,
+      category: '',
+      stationName: '',
+      cityStations: [],
+      isFly: 0,
+      countHandler: null,
+      count: 0,
     };
   },
   methods: {
-    getBikeRentPosition() { // 抓取bike station，必須兩種資料都傳進來否則會影響後面icon
-      const url = `https://ptx.transportdata.tw/MOTC/v2/Bike/Station/NearBy?$top=30&$spatialFilter=nearby(${this.latitude},${this.longitude},800)`;
-      this.$http.get(url, { headers: getAuthorizationeHader() })
-        .then((res) => {
-          const dataArry = res.data;
-          dataArry.forEach((item) => {
-            const data = {
-              BikesCapacity: item.BikesCapacity,
-              StationAddress: item.StationAddress,
-              StationPosition: item.StationPosition,
-              StationID: item.StationID,
-              AuthorityID: item.AuthorityID,
-            };
-            this.data.push(data);
-          });
-          this.getBikeRentInfo();
-        });
-    },
-    getBikeRentInfo() {
-      const url = `https://ptx.transportdata.tw/MOTC/v2/Bike/Availability/NearBy?$top=30&$spatialFilter=nearby(${this.latitude},${this.longitude},800)`;
-      this.$http.get(url, { headers: getAuthorizationeHader() })
-        .then((res) => {
-          const dataArry = res.data;
-          dataArry.forEach((item) => {
-            const indexData = this.data.find((el) => el.StationID === item.StationID);
-            if (indexData) {
-              indexData.StationUID = item.StationUID;
-              indexData.AvailableRentBikes = item.AvailableRentBikes;
-              indexData.AvailableReturnBikes = item.AvailableReturnBikes;
-              indexData.ServiceStatus = item.ServiceStatus;
-            }
-          });
-          this.areaKey = this.currentCategory[this.data[0].AuthorityID];
-          this.renderMarker(); // 渲染站點
-          this.getBikeRoad(); // 渲染腳踏車道
-        });
-    },
-    getBikeRoad() { // 依據所在地縣市腳踏車路線
-      const url = `https://ptx.transportdata.tw/MOTC/v2/Cycling/Shape/${this.areaKey}?$format=JSON`;
-      this.$http.get(url, { headers: getAuthorizationeHader() })
-        .then((res) => {
-          this.road = res.data;
-          this.road.forEach((item) => {
-            item.Geometry = wkt.read(item.Geometry).toJson();
-          });
-          this.showBikeRoad(); // 顯示所在地所有較踏車路徑
-        });
-    },
-    changeMapCenter(latitude, longitude) {
-      map.panTo([latitude, longitude]);
-      map.setZoom(16);
+    getNearStation,
+    getNearbygetBikeRentInfo,
+    getCityPositionStation,
+    backToMylocal() {
+      this.mapCenter = {};
+      this.count = 0;
+      this.map.flyTo([this.latitude, this.longitude]);
     },
     renderMap() { // 抓到自己座標後產生地圖
-      map = L.map('map', { ...this.local });
+      this.map = L.map('map', {
+        ...this.local,
+        zoomControl: false,
+        fadeAnimation: true,
+        zoomAnimation: false,
+      });
       const redIcon = new L.Icon({
         iconUrl: 'https://cdn.rawgit.com/pointhi/leaflet-color-markers/master/img/marker-icon-2x-red.png',
         shadowUrl: 'https://cdnjs.cloudflare.com/ajax/libs/leaflet/0.7.7/images/marker-shadow.png',
@@ -195,95 +150,90 @@ export default {
         {
           attribution: '&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors',
         },
-      ).addTo(map);
-      L.marker(this.local.center, { icon: redIcon }).addTo(map);
-      this.getBikeRentPosition(); // 抓取站點資料
-    },
-    renderMarker() { // 加入座標，放入座標群組(預設顯示可租車位的座標)
-      this.data.forEach((item) => {
-        const stationBike = L.divIcon({ // 預設icon黃色顯示為可租、黑色可還
-          html: `<div class="Rentstation map-marker">
-          ${item.AvailableRentBikes}</div>`,
-          className: 'opactiy',
+      ).addTo(this.map);
+      L.marker(this.local.center, { icon: redIcon }).addTo(this.map);
+      this.getNearStation(this.latitude, this.longitude)
+        .then(([res1, res2]) => {
+          res1.data.forEach((resData1) => {
+            res2.data.forEach((resData2) => {
+              if (resData1.StationUID === resData2.StationUID) {
+                const data = {
+                  ...resData1,
+                  ...resData2,
+                };
+                this.data.push(data);
+              }
+            });
+          });
+          this.stationData = [...this.data];
+        })
+        .catch((err) => {
+          console.log(err);
         });
-        markers.addLayer(
-          L.marker([item.StationPosition.PositionLat, item.StationPosition.PositionLon],
-            { icon: stationBike }),
-        );
+      this.map.on('movestart', () => {
+        this.localIconShowHiden = 1;
       });
-      map.addLayer(markers);
+      this.map.on('moveend ', () => {
+        this.localIconShowHiden = 0;
+        this.mapCenter = { ...this.map.getCenter() };
+      });
     },
     showRentMarker() { // 渲染可租用車位
       this.removeMarker();
-      this.data.forEach((item) => {
+      this.stationData.forEach((item) => {
         const stationBike = L.divIcon({ // 預設icon黃色顯示為可租、黑色可還
           html: `<div class="Rentstation map-marker">${item.AvailableRentBikes}</div>`,
           className: 'opactiy',
         });
-        markers.addLayer(
+        this.markers.addLayer(
           L.marker([item.StationPosition.PositionLat, item.StationPosition.PositionLon],
-            { icon: stationBike }),
+            { icon: stationBike })
+            .bindPopup(
+              `<div class="card">
+                <div class="card-header">
+                  <h5 class="card-title mb-0">${item.StationName.Zh_tw} ${item.StationAddress.Zh_tw}</h5>
+                </div>
+                <div class="card-body">
+                  <p class="card-text my-0 fs-5">${this.changServiceStatusInfo(item.ServiceStatus)}</p>
+                  <p class="card-text my-0 fs-5">可借車輛:${item.AvailableRentBikes}</p>
+                  <p class="card-text my-0 fs-5">可停空位:${item.AvailableReturnBikes}</p>
+                </div>
+              </div>`,
+            ),
         );
       });
-      map.addLayer(markers);
+      this.map.addLayer(this.markers);
     },
     showReturnMarker() { // 渲染可還車位
       this.removeMarker(); // 清除icon
-      this.data.forEach((item) => {
+      this.stationData.forEach((item) => {
         const stationBike = L.divIcon({ // 預設icon黃色顯示為可租、黑色可還
           html: `<div class="Returnstation map-marker">${item.AvailableReturnBikes}</div>`,
           className: 'opactiy',
         });
-        markers.addLayer(
+        this.markers.addLayer(
           L.marker([item.StationPosition.PositionLat, item.StationPosition.PositionLon],
-            { icon: stationBike }),
+            { icon: stationBike })
+            .bindPopup(
+              `<div class="card">
+                <div class="card-header">
+                  <h5 class="card-title mb-0">${item.StationName.Zh_tw} ${item.StationAddress.Zh_tw}</h5>
+                </div>
+                <div class="card-body">
+                  <p class="card-text my-0 fs-5">${this.changServiceStatusInfo(item.ServiceStatus)}</p>
+                  <p class="card-text my-0 fs-5">可借車輛:${item.AvailableRentBikes}</p>
+                  <p class="card-text my-0 fs-5">可停空位:${item.AvailableReturnBikes}</p>
+                </div>
+              </div>`,
+            ),
         );
       });
-      map.addLayer(markers);
-    },
-    switchRentReturn() { // 切換租車和可還車位
-      this.swichBikeStation = !this.swichBikeStation;
-      if (this.swichBikeStation) {
-        this.showRentMarker();
-      } else {
-        this.showReturnMarker();
-      }
-    },
-    showBikeRoad() {
-      const style = {
-        color: 'red',
-        weight: 3,
-        opacity: 0.5,
-      };
-      this.road.forEach((obj) => {
-        myLayer = L.geoJSON(obj.Geometry, {
-          style,
-        }).addTo(map);
-        myLayer.addData(obj.Geometry);
-        this.myLayers.push(myLayer);
-        map.fitBounds(myLayer.getBounds());
-        this.changeMapCenter(this.latitude, this.longitude);
-      });
+      this.map.addLayer(this.markers);
     },
     removeMarker() { // 刪除全部marker
-      // console.log找markers 原生方法
-      markers.eachLayer((layer) => {
-        markers.removeLayer(layer);
+      this.markers.eachLayer((layer) => {
+        this.markers.removeLayer(layer);
       });
-    },
-    swicthBikeRoad() {
-      this.switchBikesRoad = !this.switchBikesRoad;
-      if (this.switchBikesRoad) {
-        this.showBikeRoad();
-      } else {
-        this.removeBikeRoad();
-      }
-    },
-    removeBikeRoad() { // 刪除腳踏車全部路線
-      this.myLayers.forEach((item) => {
-        map.removeLayer(item);
-      });
-      this.myLayers = [];
     },
     getLocation() { // 抓取自己位置
       if (navigator.geolocation) {
@@ -299,9 +249,154 @@ export default {
       };
       this.renderMap();
     },
+    changServiceStatusInfo(ServiceStatus) {
+      let str;
+      if (ServiceStatus === 0) {
+        str = '停止營運';
+      } else if (ServiceStatus === 1) {
+        str = '正常營運';
+      } else {
+        str = '暫停營運';
+      }
+      return str;
+    },
+    getCitysStations() { // 抓取縣市站點名稱和座標
+      this.stationName = '';
+      if (this.category) {
+        this.getCityPositionStation(this.category)
+          .then((res) => {
+            this.cityStations = res.data;
+          })
+          .catch((err) => {
+            console.log(err);
+          });
+      }
+      this.cityStations = [];
+    },
+    searchStation() { // 移動到站點
+      this.count = 0;
+      const position = this.cityStations
+        .find((item) => item.StationName.Zh_tw === this.stationName).StationPosition;
+      this.map.flyTo([position.PositionLat, position.PositionLon]);
+    },
+    Updata() {
+      if (this.mapCenter.lat) {
+        this.getNearStation(this.mapCenter.lat, this.mapCenter.lng)
+          .then(([res1, res2]) => {
+            this.data = [];
+            res1.data.forEach((resData1) => {
+              res2.data.forEach((resData2) => {
+                if (resData1.StationUID === resData2.StationUID) {
+                  const data = {
+                    ...resData1,
+                    ...resData2,
+                  };
+                  this.data.push(data);
+                }
+              });
+            });
+            this.stationData = [...this.data];
+          })
+          .catch((err) => {
+            console.log(err);
+          });
+        return;
+      }
+      this.getNearStation(this.latitude, this.longitude)
+        .then(([res1, res2]) => {
+          this.data = [];
+          res1.data.forEach((resData1) => {
+            res2.data.forEach((resData2) => {
+              if (resData1.StationUID === resData2.StationUID) {
+                const data = {
+                  ...resData1,
+                  ...resData2,
+                };
+                this.data.push(data);
+              }
+            });
+          });
+          this.stationData = [...this.data];
+        })
+        .catch((err) => {
+          console.log(err);
+        });
+    },
+    countTime() { // 3分鐘更新資料
+      this.count = 0;
+      clearInterval(this.countHandler);
+      this.countHandler = setInterval(() => {
+        this.count += 1;
+        if (this.count === 180) {
+          this.Updata();
+          this.countTime();
+        }
+      }, 1000);
+    },
+  },
+  computed: {
+    localIconShowHiden: {
+      get() {
+        if (this.mapCenter.lat) {
+          const lat = Math.abs(this.mapCenter.lat - this.latitude);
+          const long = Math.abs(this.mapCenter.lng - this.longitude);
+          if (lat > 0.002 || long > 0.002) {
+            if (this.isFly) {
+              return false;
+            }
+            return true;
+          }
+          return false;
+        }
+        return false;
+      },
+      set(val) {
+        this.isFly = val;
+      },
+    },
+  },
+  watch: {
+    swichBikeStation() {
+      if (this.swichBikeStation) {
+        this.showReturnMarker();
+      } else {
+        this.showRentMarker();
+      }
+    },
+    stationData() {
+      if (this.swichBikeStation) {
+        this.showReturnMarker();
+      } else {
+        this.showRentMarker();
+      }
+    },
+    async mapCenter() {
+      if (this.mapCenter.lat) {
+        await this.getNearStation(this.mapCenter.lat, this.mapCenter.lng)
+          .then(([res1, res2]) => {
+            this.data = [];
+            res1.data.forEach((resData1) => {
+              res2.data.forEach((resData2) => {
+                if (resData1.StationUID === resData2.StationUID) {
+                  const data = {
+                    ...resData1,
+                    ...resData2,
+                  };
+                  this.data.push(data);
+                }
+              });
+            });
+            this.stationData = [...this.data];
+          })
+          .catch((err) => {
+            console.log(err);
+          });
+      }
+    },
   },
   mounted() {
     this.getLocation(); // 讀取自己位置(非同步)
+    this.countTime();
   },
 };
 </script>

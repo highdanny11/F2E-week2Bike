@@ -11,7 +11,7 @@
           />
           <i class="bi bi-chevron-left d-block d-lg-none text-dark"></i>
         </a>
-        <p class="mb-0">{{data.Name}}</p>
+        <p class="mb-0">{{data.name}}</p>
         <div class="invisible d-lg-none"></div>
       </div>
     </div>
@@ -36,12 +36,11 @@
           <i class="bi bi-geo-alt-fill text-primary me-2"></i>
           {{data.Address}}
           <router-link
-          :to="`/FoodViewMap/${data.Position?.PositionLat},
-          ${data.Position?.PositionLon},${data.Name}`"
+          :to="`/FoodViewMap/${toMapData}`"
           class="btn btn-primary px-2 py-1 rounded-50 ms-2">地圖</router-link>
         </h5>
         <p class="text-info">
-          {{data.DescriptionDetail === undefined ? data.Description : data.DescriptionDetail}}
+          {{data.DescriptionDetail}}
         </p>
       </div>
     </div>
@@ -49,46 +48,53 @@
 </template>
 
 <script>
-import JsSHA from 'jssha';
+import getAuthorizationeHader from '@/assets/javascript/AuthorizationHeader';
 
-const getAuthorizationeHader = () => {
-  const AppID = process.env.VUE_APP_TRX_ID;
-  const AppKey = process.env.VUE_APP_TRX_KEY;
-  const GMTString = new Date().toUTCString();
-  const ShaObj = new JsSHA('SHA-1', 'TEXT');
-  ShaObj.setHMACKey(AppKey, 'TEXT');
-  ShaObj.update(`x-date: ${GMTString}`);
-  const HMAC = ShaObj.getHMAC('B64');
-  const Authorization = `hmac username="${AppID}", algorithm="hmac-sha1", headers="x-date", signature="${HMAC}"`;
-  return { Authorization, 'X-Date': GMTString };
-};
 export default {
   data() {
     return {
       name: '',
       id: '',
       data: {},
+      toMapData: null,
     };
   },
   methods: {
     getData() {
       if (this.name === '景點') {
-        const url = `https://ptx.transportdata.tw/MOTC/v2/Tourism/ScenicSpot?$filter=contains(ID,'${this.id}')&$top=30&$format=JSON`;
+        const url = `https://ptx.transportdata.tw/MOTC/v2/Tourism/ScenicSpot?$filter=contains(ScenicSpotID,'${this.id}')&$top=30&$format=JSON`;
         this.$http.get(url, { headers: getAuthorizationeHader() })
           .then((res) => {
-            this.data = res.data[0];
+            this.updata(res.data[0]);
+          })
+          .catch((err) => {
+            console.log(err);
           });
       } else {
-        const url = `https://ptx.transportdata.tw/MOTC/v2/Tourism/Restaurant?$filter=contains(ID,'${this.id}')&$top=30&$format=JSON`;
+        const url = `https://ptx.transportdata.tw/MOTC/v2/Tourism/Restaurant?$filter=contains(RestaurantID,'${this.id}')&$top=30&$format=JSON`;
         this.$http.get(url, { headers: getAuthorizationeHader() })
           .then((res) => {
-            this.data = res.data[0];
+            this.updata(res.data[0]);
+          })
+          .catch((err) => {
+            console.log(err);
           });
       }
     },
+    updata(data) {
+      this.data = {
+        ID: data.ScenicSpotID || data.RestaurantID,
+        name: data.ScenicSpotName || data.RestaurantName,
+        Picture: { ...data.Picture },
+        Position: { ...data.Position },
+        Phone: data.Phone,
+        DescriptionDetail: data.Description || data.DescriptionDetail,
+        OpenTime: data.OpenTime,
+        Address: data.Address,
+      };
+      this.toMapData = `${this.data.Position.PositionLat},${this.data.Position.PositionLon},${this.data.name}`;
+    },
     go() {
-      // 操作歷史紀錄
-      // 回上一頁，-1，下一頁1，依此類推
       this.$router.go(-1);
     },
   },

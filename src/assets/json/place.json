@@ -1,0 +1,46 @@
+[
+  {
+    "CityName": "新竹市",
+    "City": "Hsinchu"
+  },
+  {
+    "CityName": "苗栗縣",
+    "City": "MiaoliCounty"
+  },
+  {
+    "CityName": "新北市",
+    "City": "NewTaipei"
+  },
+  {
+    "CityName": "臺中市",
+    "City": "Taichung"
+  },
+  {
+    "CityName": "屏東縣",
+    "City": "PingtungCounty"
+  },
+  {
+    "CityName": "金門縣",
+    "City": "KinmenCounty"
+  },
+  {
+    "CityName": "桃園市",
+    "City": "Taoyuan"
+  },
+  {
+    "CityName": "臺北市",
+    "City": "Taipei"
+  },
+  {
+    "CityName": "高雄市",
+    "City": "Kaohsiung"
+  },
+  {
+    "CityName": "臺南市",
+    "City": "Tainan"
+  },
+  {
+    "CityName": "嘉義市",
+    "City": "Chiayi"
+  }
+]

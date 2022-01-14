@@ -4,7 +4,10 @@
     height: 43px;
   }
   & .invisible {
-    width: 105px;
+    width: 16px;
+    @include media-breakpoint-up(lg) {
+      width: 105px;
+    }
   }
   &-detaiil .invisible{
     width: 0;

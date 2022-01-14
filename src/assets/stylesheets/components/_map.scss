@@ -14,6 +14,9 @@
   width: 36px;
   height: 50px;
   text-align: center;
+  top: -45px;
+  left: -10px;
+  position: absolute;
 }
 .map-marker.Returnstation {
   background-image: url('~@/assets/img/Union2.png');
@@ -30,4 +33,18 @@
 .leaflet-div-icon {
   background-color: transparent;
   border: none;
+}
+.positionIcon {
+  display: flex;
+  bottom: 10%;
+  right: 5%;
+  z-index: 1000;
+  width: 62px;
+  height: 62px;
+  @include media-breakpoint-up(md) {
+    bottom: 5%;
+    right:5%;
+    width: 80px;
+    height: 80px;
+  }
 }

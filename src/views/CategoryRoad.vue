@@ -3,20 +3,21 @@
     <div class="container">
       <div class="d-flex justify-content-between align-items-center">
         <!-- a 連結到首頁 -->
-        <router-link to="/"
+        <a href="#" @click.prevent="toList"
           ><img
             class="navHeader-logo d-none d-lg-block"
             :src="require('@/assets/img/logo.png')"
             alt=""
           />
           <i class="bi bi-chevron-left d-block d-lg-none text-dark"></i>
-        </router-link>
-        <!-- 切換顯示，車道 -->
+        </a>
+        <h3 class="mb-0" v-show="roadName">{{roadName}}</h3>
         <select
+          v-if="changeMap"
           v-model="currentCategory"
           @change="getCategoryRoad()"
           class="form-select w-auto rounded-31"
-          aria-label="Default select example"
+          aria-label="select Category"
         >
           <option value="all" selected disabled>選擇縣市</option>
           <option value="Taipei">臺 北 市</option>
@@ -43,25 +44,24 @@
       </div>
     </div>
   </nav>
-  <div class="container CategoryRoad pt-10">
+  <div v-if="changeMap"
+  class="container CategoryRoad py-10 position-relative">
     <p class="text-info" v-if="!switchContent">尚未選擇任何縣市</p>
     <ul v-if="switchContent"
     class="row row-cols-lg-3 row-cols-md-2 row-cols-1
-    gx-md-3 gx-lg-2 gy-3 list-unstyled">
+    gx-md-3 gx-lg-2 gy-3 list-unstyled pb-5">
       <li
-      v-for="item in data" :key="item.Geometry"
+      v-for="item in roadList" :key="item.Geometry.coordinates[0][0]"
       class="col">
         <div class="card">
           <div class="card-body">
             <h5 class="card-title text-overflow">{{item.RouteName}}</h5>
             <!-- 跳轉連結 -->
-            <router-link
-            :to="`/CategoryRoadMap/${this.currentCategory},${changeString(item.RouteName)}`"
-            class="stretched-link"
-            ></router-link>
+            <a href="#" @click.prevent="toMap(item)"
+            class="stretched-link"></a>
             <div class="d-flex justify-content-between
             align-items-center text-info">
-              <p>{{item.CyclingLength / 1000}}公里</p>
+              <p>{{item.CyclingLength ? `${item.CyclingLength}公尺` : '暫不提供'}}</p>
               <p class="d-flex align-items-center text-info text-overflow w-50">
                 <i class="bi bi-geo-alt-fill text-primary me-2"></i>
                 {{item.City}}  {{item.Town}}
@@ -71,43 +71,113 @@
         </div>
       </li>
     </ul>
-    </div>
+    <ul v-if="switchContent"
+    class="
+    list-unstyled d-flex justify-content-center
+    align-items-center position-absolute start-50 bottom-0 translate-middle-x">
+      <li>
+        <button type="button" @click="frontPage"
+        :class="{'disabled' : currentPage === 1}"
+        class="carouselBtnLeft btn">
+          <i class="bi bi-caret-left-fill"></i>
+        </button>
+      </li>
+      <li class="mx-3">
+        <p class="mb-0 fs-4 text-bold">{{currentPage}}</p>
+      </li>
+      <li>
+        <button type="button" @click="nextPage"
+        :class="{'disabled' : currentPage === data.length}"
+        class="carouselBtnRight btn">
+          <i class="bi bi-caret-right-fill"></i>
+        </button>
+      </li>
+    </ul>
+  </div>
+  <RoadMap
+  :road-data="roadDate"
+  v-if="!changeMap"></RoadMap>
 </template>
 
 <script>
-import JsSHA from 'jssha';
+import Wkt from 'wicket';
+import getAuthorizationeHader from '@/assets/javascript/AuthorizationHeader';
+import RoadMap from '@/components/RoadMap.vue';
 
-const getAuthorizationeHader = () => {
-  const AppID = process.env.VUE_APP_TRX_ID;
-  const AppKey = process.env.VUE_APP_TRX_KEY;
-  const GMTString = new Date().toUTCString();
-  const ShaObj = new JsSHA('SHA-1', 'TEXT');
-  ShaObj.setHMACKey(AppKey, 'TEXT');
-  ShaObj.update(`x-date: ${GMTString}`);
-  const HMAC = ShaObj.getHMAC('B64');
-  const Authorization = `hmac username="${AppID}", algorithm="hmac-sha1", headers="x-date", signature="${HMAC}"`;
-  return { Authorization, 'X-Date': GMTString };
-};
+const wkt = new Wkt.Wkt();
+
 export default {
+  components: {
+    RoadMap,
+  },
   data() {
     return {
       currentCategory: 'all',
       data: [],
       switchContent: false,
+      currentPage: 1,
+      changeMap: true,
+      roadName: '',
+      roadDate: null,
     };
   },
   methods: {
     getCategoryRoad() {
-      const url = `https://ptx.transportdata.tw/MOTC/v2/Cycling/Shape/${this.currentCategory}?$top=30&$format=JSON`;
+      this.changeMap = true;
+      const url = `https://ptx.transportdata.tw/MOTC/v2/Cycling/Shape/${this.currentCategory}?&$format=JSON`;
       this.$http.get(url, { headers: getAuthorizationeHader() })
         .then((res) => {
           this.switchContent = true;
-          this.data = res.data;
+          let arry = [];
+          this.data = [];
+          res.data.forEach((item, i) => {
+            item.Geometry = wkt.read(item.Geometry).toJson();
+            arry.push(item);
+            if (arry.length === 20) {
+              this.data.push(arry);
+              arry = [];
+              return;
+            }
+            if (i === res.data.length - 1) {
+              this.data.push(arry);
+            }
+          });
+        })
+        .catch((err) => {
+          console.log(err);
         });
     },
-    changeString(str) {
-      const changeStr = str.replace('/', '');
-      return changeStr;
+    frontPage() {
+      this.currentPage -= 1;
+      window.scrollTo(0, 100);
+    },
+    nextPage() {
+      this.currentPage += 1;
+      window.scrollTo(0, 100);
+    },
+    toMap(item) {
+      this.changeMap = false;
+      this.roadName = item.RouteName;
+      const data = JSON.parse(JSON.stringify(item));
+      this.roadDate = data;
+    },
+    toList() {
+      if (this.changeMap) {
+        this.$router.push({
+          name: 'Home',
+        });
+      }
+      this.roadName = '';
+      this.changeMap = true;
+      this.roadDate = null;
+    },
+  },
+  computed: {
+    roadList() {
+      if (this.currentPage >= this.data.length) {
+        return this.data[this.data.length - 1];
+      }
+      return this.data[this.currentPage - 1];
     },
   },
 };

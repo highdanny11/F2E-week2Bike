@@ -52,17 +52,17 @@ export default {
           attribution: '&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors',
         },
       ).addTo(map);
-      L.marker([...local.center], { icon: redIcon }).addTo(map);
+      L.marker([...local.center], { icon: redIcon })
+        .bindPopup(`<h5 class="text-primary" style="font-weight:700;">${this.name}</h5>`)
+        .addTo(map)
+        .openPopup();
     },
     go() {
-      // 操作歷史紀錄
-      // 回上一頁，-1，下一頁1，依此類推
       this.$router.go(-1);
     },
   },
   mounted() {
     const data = this.$route.params.id.split(',');
-    console.log(data);
     this.PositionLat = Number(data[0]);
     this.PositionLon = Number(data[1]);
     this.name = data[2];
