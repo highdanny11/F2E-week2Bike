@@ -1,5 +1,5 @@
 module.exports = {
-  publicPath: '/F2E-week2Bike/',
+  publicPath: './',
   chainWebpack: config => {
     config.plugin('html').tap(args => {
       const [obj] = args;
