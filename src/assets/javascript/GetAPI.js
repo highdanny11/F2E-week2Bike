@@ -6,7 +6,8 @@ export const getNearbygetBikeRentInfo = (lat, long) => {
   return axios.get(url, { headers: getAuthorizationeHader() });
 };
 export const getCityPositionStation = (category) => {
-  const url = `https://ptx.transportdata.tw/MOTC/v2/Bike/Station/${category}?%24select=StationName,StationPosition&$format=JSON`;
+  // const url = `https://ptx.transportdata.tw/MOTC/v2/Bike/Station/${category}?%24select=StationName,StationPosition&$format=JSON`;
+  const url = `https://tdx.transportdata.tw/api/basic/v2/Bike/Station/City/${category}?%24select=StationName,StationPosition&$format=JSON`;
   return axios.get(url, { headers: getAuthorizationeHader() });
 };
 export const getNearStation = ((latitude, longitude) => {

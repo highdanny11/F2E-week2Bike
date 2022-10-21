@@ -124,7 +124,8 @@ export default {
   methods: {
     getCategoryRoad() {
       this.changeMap = true;
-      const url = `https://ptx.transportdata.tw/MOTC/v2/Cycling/Shape/${this.currentCategory}?&$format=JSON`;
+      // const url = `https://ptx.transportdata.tw/MOTC/v2/Cycling/Shape/${this.currentCategory}?&$format=JSON`;
+      const url = `https://tdx.transportdata.tw/api/basic/v2/Cycling/Shape/City/${this.currentCategory}?&$format=JSON`;
       this.$http.get(url, { headers: getAuthorizationeHader() })
         .then((res) => {
           this.switchContent = true;
