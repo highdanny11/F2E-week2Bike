@@ -100,8 +100,8 @@ export default {
   },
   methods: {
     getnearAllInfo() {
-      const ScenicSpoturl = `https://ptx.transportdata.tw/MOTC/v2/Tourism/ScenicSpot?$top=30&$spatialFilter=nearby(${this.latitude},${this.longitude}, 5000)&$format=JSON`;
-      const Foodurl = `https://ptx.transportdata.tw/MOTC/v2/Tourism/Restaurant?$top=30&$spatialFilter=nearby(${this.latitude},${this.longitude}, 5000)&$format=JSON`;
+      const ScenicSpoturl = `https://tdx.transportdata.tw/api/basic/v2/Tourism/ScenicSpot?$top=30&$spatialFilter=nearby(${this.latitude},${this.longitude}, 5000)&$format=JSON`;
+      const Foodurl = `https://tdx.transportdata.tw/api/basic/v2/Tourism/Restaurant?$top=30&$spatialFilter=nearby(${this.latitude},${this.longitude}, 5000)&$format=JSON`;
       const getnearbyviewinfo = (() => this.$http.get(ScenicSpoturl,
         { headers: getAuthorizationeHader() })
       );

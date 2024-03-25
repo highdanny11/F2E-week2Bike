@@ -62,7 +62,7 @@ export default {
   methods: {
     getData() {
       if (this.name === '景點') {
-        const url = `https://ptx.transportdata.tw/MOTC/v2/Tourism/ScenicSpot?$filter=contains(ScenicSpotID,'${this.id}')&$top=30&$format=JSON`;
+        const url = `https://tdx.transportdata.tw/api/basic/v2/Tourism/ScenicSpot?$filter=contains(ScenicSpotID,'${this.id}')&$top=30&$format=JSON`;
         this.$http.get(url, { headers: getAuthorizationeHader() })
           .then((res) => {
             this.updata(res.data[0]);
@@ -71,7 +71,7 @@ export default {
             console.log(err);
           });
       } else {
-        const url = `https://ptx.transportdata.tw/MOTC/v2/Tourism/Restaurant?$filter=contains(RestaurantID,'${this.id}')&$top=30&$format=JSON`;
+        const url = `https://tdx.transportdata.tw/api/basic/v2/Tourism/Restaurant?$filter=contains(RestaurantID,'${this.id}')&$top=30&$format=JSON`;
         this.$http.get(url, { headers: getAuthorizationeHader() })
           .then((res) => {
             this.updata(res.data[0]);
